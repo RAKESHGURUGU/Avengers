@@ -216,15 +216,10 @@
                             <input type="text" class="form-control" id="branchName">
                         </div>
                         <div class="mb-3">
-<<<<<<< HEAD
-                            <label class="form-label">Branch Code</label>
-                            <input type="text" class="form-control" id="branchCode">
-=======
                             <label class="form-label">Program</label>
                             <select class="form-select" id="branchProgramSelect">
                                 <!-- Filled by JS -->
                             </select>
->>>>>>> a888b42141bc351270b8834ef26a25a037b3a25f
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Status</label>
@@ -245,8 +240,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-<<<<<<< HEAD
-=======
         // Sample programs data (in production this should come from the backend)
         const programsData = [
             { id: 1, name: 'B.Tech', status: 'active' },
@@ -263,7 +256,6 @@
             { id: 4, name: 'Civil Engineering', programId: 1, status: 'active' }
         ];
 
->>>>>>> a888b42141bc351270b8834ef26a25a037b3a25f
         // DOM Elements
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
@@ -274,97 +266,6 @@
             sidebar.classList.toggle('mobile-open');
         });
 
-<<<<<<< HEAD
-        // API Base URL
-        const API_BASE = 'http://127.0.0.1:8000';
-
-        // Load Branches Table
-        async function loadBranchesTable() {
-            try {
-                const response = await fetch(`${API_BASE}/branches`);
-                const branches = await response.json();
-                const tbody = document.getElementById('branchesTable');
-                tbody.innerHTML = branches.map(branch => `
-                    <tr>
-                        <td>${branch.id}</td>
-                        <td>${branch.name}</td>
-                        <td><span class="status-badge status-${branch.status ? 'active' : 'inactive'}">${branch.status ? 'ACTIVE' : 'INACTIVE'}</span></td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editBranch(${branch.id})">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteBranch(${branch.id})">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (error) {
-                console.error('Error loading branches:', error);
-            }
-        }
-
-        // Add/Edit Branch
-        async function saveBranch() {
-            const name = document.getElementById('branchName').value;
-            const code = document.getElementById('branchCode').value;
-            const status = document.getElementById('branchStatus').value === 'active';
-
-            if (!name || !code) {
-                alert('Please enter branch name and code');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE}/branches`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: name, code: code })
-                });
-
-                if (response.ok) {
-                    alert('Branch saved successfully!');
-                    document.getElementById('branchForm').reset();
-                    bootstrap.Modal.getInstance(document.getElementById('branchModal')).hide();
-                    loadBranchesTable();
-                } else {
-                    alert('Error saving branch');
-                }
-            } catch (error) {
-                console.error('Error saving branch:', error);
-            }
-        }
-
-        // Edit Branch (placeholder)
-        function editBranch(id) {
-            alert('Edit functionality not implemented yet');
-        }
-
-        // Delete Branch
-        async function deleteBranch(id) {
-            if (confirm('Are you sure you want to delete this branch?')) {
-                try {
-                    const response = await fetch(`${API_BASE}/branches/${id}`, {
-                        method: 'DELETE'
-                    });
-
-                    if (response.ok) {
-                        loadBranchesTable();
-                    } else {
-                        alert('Error deleting branch');
-                    }
-                } catch (error) {
-                    console.error('Error deleting branch:', error);
-                }
-            }
-        }
-
-        // Modal Events
-        document.getElementById('saveBranch').addEventListener('click', saveBranch);
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', loadBranchesTable);
-=======
         // Populate program selects (filter and modal)
         function populateProgramSelects() {
             const filter = document.getElementById('programFilter');
@@ -478,7 +379,6 @@
         // Initialize
         populateProgramSelects();
         loadBranchesTable();
->>>>>>> a888b42141bc351270b8834ef26a25a037b3a25f
     </script>
 </body>
 </html>
