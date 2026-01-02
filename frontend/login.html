@@ -141,6 +141,18 @@
             localStorage.setItem(key, JSON.stringify(creds));
             // Print stored data to console for debugging/demo
             console.log(key + ' saved:', creds);
+            return creds;
+        }
+
+        function loadCredentials(key) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) return null;
+                return JSON.parse(raw);
+            } catch (err) {
+                console.warn('Error parsing stored credentials for', key, err);
+                return null;
+            }
         }
 
         // Admin Login
@@ -148,7 +160,13 @@
             e.preventDefault();
             const username = document.getElementById('adminUsername').value;
             const password = document.getElementById('adminPassword').value;
-            saveCredentials('adminCredentials', username, password);
+            // Save credentials
+            const saved = saveCredentials('adminCredentials', username, password);
+            // Immediately load them back and log (demonstrates "load after click")
+            const loaded = loadCredentials('adminCredentials');
+            console.log('Loaded after save (admin):', loaded);
+            // Set a lightweight session indicator for downstream pages
+            sessionStorage.setItem('currentUser', JSON.stringify({ role: 'admin', username: (loaded && loaded.username) || '' }));
             // Simulate login
             alert('Admin login successful!');
             window.location.href = 'index.html';
@@ -159,7 +177,13 @@
             e.preventDefault();
             const username = document.getElementById('facultyUsername').value;
             const password = document.getElementById('facultyPassword').value;
-            saveCredentials('facultyCredentials', username, password);
+            // Save credentials
+            const saved = saveCredentials('facultyCredentials', username, password);
+            // Immediately load them back and log (demonstrates "load after click")
+            const loaded = loadCredentials('facultyCredentials');
+            console.log('Loaded after save (faculty):', loaded);
+            // Set a lightweight session indicator for downstream pages
+            sessionStorage.setItem('currentUser', JSON.stringify({ role: 'faculty', username: (loaded && loaded.username) || '' }));
             // Simulate login
             alert('Faculty login successful!');
             window.location.href = 'faculty-dashboard.html';
@@ -168,12 +192,12 @@
         // Print any previously stored credentials to console on page load (convenience)
         window.addEventListener('load', function() {
             try {
-                const a = localStorage.getItem('adminCredentials');
-                const f = localStorage.getItem('facultyCredentials');
-                if (a) console.log('Stored adminCredentials:', JSON.parse(a));
-                if (f) console.log('Stored facultyCredentials:', JSON.parse(f));
+                const a = loadCredentials('adminCredentials');
+                const f = loadCredentials('facultyCredentials');
+                if (a) console.log('Stored adminCredentials (on load):', a);
+                if (f) console.log('Stored facultyCredentials (on load):', f);
             } catch (err) {
-                console.warn('Could not read stored credentials:', err);
+                console.warn('Could not read stored credentials on load:', err);
             }
         });
     </script>
