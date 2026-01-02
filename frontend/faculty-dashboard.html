@@ -199,6 +199,35 @@
         toggleSidebar.addEventListener('click', () => {
             sidebar.classList.toggle('mobile-open');
         });
+
+        // API Base URL
+        const API_BASE = 'http://127.0.0.1:8000';
+
+        // Load Dashboard Stats
+        async function loadDashboardStats() {
+            try {
+                const [programsRes, branchesRes, coursesRes, facultiesRes] = await Promise.all([
+                    fetch(`${API_BASE}/programs`),
+                    fetch(`${API_BASE}/branches`),
+                    fetch(`${API_BASE}/courses`),
+                    fetch(`${API_BASE}/faculties`)
+                ]);
+
+                const programs = await programsRes.json();
+                const branches = await branchesRes.json();
+                const courses = await coursesRes.json();
+                const faculties = await facultiesRes.json();
+
+                // Update stats (assuming we map to the cards)
+                document.querySelector('.stat-number').textContent = courses.length; // Courses
+                // For other stats, since QPs not implemented yet, keep static or add more
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+            }
+        }
+
+        // Load stats on page load
+        document.addEventListener('DOMContentLoaded', loadDashboardStats);
     </script>
 </body>
 </html>

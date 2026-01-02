@@ -78,6 +78,7 @@ class Faculty(Base):
     name = Column(String(100), nullable=False)
     empid = Column(String(20), unique=True, nullable=False)
     phone = Column(String(15), nullable=False)
+    username = Column(String(50), unique=True, nullable=False)
     email = Column(String(100), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     status = Column(Boolean, default=True)

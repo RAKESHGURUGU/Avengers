@@ -156,37 +156,57 @@
         }
 
         // Admin Login
-        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+        document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const username = document.getElementById('adminUsername').value;
             const password = document.getElementById('adminPassword').value;
-            // Save credentials
-            const saved = saveCredentials('adminCredentials', username, password);
-            // Immediately load them back and log (demonstrates "load after click")
-            const loaded = loadCredentials('adminCredentials');
-            console.log('Loaded after save (admin):', loaded);
-            // Set a lightweight session indicator for downstream pages
-            sessionStorage.setItem('currentUser', JSON.stringify({ role: 'admin', username: (loaded && loaded.username) || '' }));
-            // Simulate login
-            alert('Admin login successful!');
-            window.location.href = 'index.html';
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    sessionStorage.setItem('user', JSON.stringify(data.user));
+                    alert('Admin login successful!');
+                    window.location.href = 'index.html';
+                } else {
+                    alert('Invalid credentials');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login failed');
+            }
         });
 
         // Faculty Login
-        document.getElementById('facultyLoginForm').addEventListener('submit', function(e) {
+        document.getElementById('facultyLoginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const username = document.getElementById('facultyUsername').value;
             const password = document.getElementById('facultyPassword').value;
-            // Save credentials
-            const saved = saveCredentials('facultyCredentials', username, password);
-            // Immediately load them back and log (demonstrates "load after click")
-            const loaded = loadCredentials('facultyCredentials');
-            console.log('Loaded after save (faculty):', loaded);
-            // Set a lightweight session indicator for downstream pages
-            sessionStorage.setItem('currentUser', JSON.stringify({ role: 'faculty', username: (loaded && loaded.username) || '' }));
-            // Simulate login
-            alert('Faculty login successful!');
-            window.location.href = 'faculty-dashboard.html';
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    sessionStorage.setItem('user', JSON.stringify(data.user));
+                    alert('Faculty login successful!');
+                    window.location.href = 'faculty-dashboard.html';
+                } else {
+                    alert('Invalid credentials');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login failed');
+            }
         });
 
         // Print any previously stored credentials to console on page load (convenience)

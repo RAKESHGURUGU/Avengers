@@ -1,6 +1,11 @@
 from pydantic import BaseModel
 from typing import Optional
 
+# Login schema
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
 # Program schemas
 class ProgramBase(BaseModel):
     name: str
@@ -106,6 +111,7 @@ class FacultyBase(BaseModel):
     name: str
     empid: str
     phone: str
+    username: str
     email: str
     password_hash: str
 
