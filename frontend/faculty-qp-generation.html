@@ -243,14 +243,17 @@
                                 <div class="question-input" id="questionInputContainer">
                                     <!-- Dynamic input will be added here -->
                                 </div>
-                                <div class="mt-4">
-                                    <button type="button" class="btn btn-success" id="generateTemplate">
-                                        <i class="bi bi-magic me-2"></i>Generate Template
-                                    </button>
-                                    <button type="button" class="btn btn-primary ms-2" id="addQuestion">
-                                        <i class="bi bi-plus-circle me-2"></i>Add Question
-                                    </button>
-                                </div>
+                                                    <div class="mt-4">
+                                                        <button type="button" class="btn btn-success" id="generateTemplate">
+                                                            <i class="bi bi-magic me-2"></i>Generate Template
+                                                        </button>
+                                                        <button type="button" class="btn btn-primary ms-2" id="addQuestion">
+                                                            <i class="bi bi-plus-circle me-2"></i>Add Question
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-primary ms-2" id="downloadPdf" disabled>
+                                                            <i class="bi bi-download me-2"></i>Download PDF
+                                                        </button>
+                                                    </div>
                             </form>
                         </div>
                     </div>
@@ -270,6 +273,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- html2pdf bundle includes html2canvas and jsPDF and handles multi-page PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
     <script>
         // DOM Elements
         const sidebar = document.getElementById('sidebar');
@@ -335,6 +340,9 @@
             }
 
             addQuestionToPreview(questionContent, unit, co, bloom, difficulty, marks);
+            // Enable download after at least one question is added
+            const downloadBtn = document.getElementById('downloadPdf');
+            if (downloadBtn) downloadBtn.disabled = false;
         });
 
         function addQuestionToPreview(content, unit, co, bloom, difficulty, marks) {
@@ -364,7 +372,29 @@
                     <!-- Questions will be added here -->
                 </div>
             `;
+            // Enable PDF download once template exists
+            const downloadBtn = document.getElementById('downloadPdf');
+            if (downloadBtn) downloadBtn.disabled = false;
         });
+
+        // Download PDF
+        const downloadPdfBtn = document.getElementById('downloadPdf');
+        if (downloadPdfBtn) {
+            downloadPdfBtn.addEventListener('click', function() {
+                // Build PDF options
+                const element = document.getElementById('qpPreview');
+                if (!element) return;
+                const opt = {
+                    margin:       10,
+                    filename:     'question-paper.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true, logging: false },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                // Note: Images must be same-origin or data URLs to embed correctly (CORS). 
+                html2pdf().set(opt).from(element).save();
+            });
+        }
     </script>
 </body>
 </html>
