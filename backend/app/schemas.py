@@ -13,6 +13,9 @@ class ProgramBase(BaseModel):
 class ProgramCreate(ProgramBase):
     pass
 
+class ProgramUpdate(ProgramBase):
+    status: Optional[bool] = None
+
 class Program(ProgramBase):
     id: int
     status: bool

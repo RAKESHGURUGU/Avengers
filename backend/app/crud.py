@@ -15,10 +15,11 @@ def create_program(db: Session, program: schemas.ProgramCreate):
     db.refresh(db_program)
     return db_program
 
-def update_program(db: Session, program_id: int, program: schemas.ProgramCreate):
+def update_program(db: Session, program_id: int, program: schemas.ProgramUpdate):
     db_program = db.query(models.Program).filter(models.Program.id == program_id).first()
     if db_program:
-        for key, value in program.dict().items():
+        update_data = program.dict(exclude_unset=True)
+        for key, value in update_data.items():
             setattr(db_program, key, value)
         db.commit()
         db.refresh(db_program)

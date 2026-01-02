@@ -250,6 +250,8 @@
         // API Base URL
         const API_BASE = 'http://127.0.0.1:8000';
 
+        let editingId = null;
+
         // Load Programs Table
         async function loadProgramsTable() {
             try {
@@ -262,6 +264,9 @@
                         <td>${program.name}</td>
                         <td><span class="status-badge status-${program.status ? 'active' : 'inactive'}">${program.status ? 'ACTIVE' : 'INACTIVE'}</span></td>
                         <td>
+                            <button class="btn btn-sm btn-outline-warning me-1" onclick="toggleStatus(${program.id}, ${program.status})">
+                                <i class="bi bi-toggle-${program.status ? 'on' : 'off'}"></i>
+                            </button>
                             <button class="btn btn-sm btn-outline-primary me-1" onclick="editProgram(${program.id})">
                                 <i class="bi bi-pencil"></i>
                             </button>
@@ -286,11 +291,21 @@
                 return;
             }
 
+            const programData = { name: name };
+            let method = 'POST';
+            let url = `${API_BASE}/programs`;
+
+            if (editingId) {
+                method = 'PUT';
+                url = `${API_BASE}/programs/${editingId}`;
+                programData.status = status;
+            }
+
             try {
-                const response = await fetch(`${API_BASE}/programs`, {
-                    method: 'POST',
+                const response = await fetch(url, {
+                    method: method,
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: name })
+                    body: JSON.stringify(programData)
                 });
 
                 if (response.ok) {
@@ -298,6 +313,7 @@
                     document.getElementById('programForm').reset();
                     bootstrap.Modal.getInstance(document.getElementById('programModal')).hide();
                     loadProgramsTable();
+                    editingId = null;
                 } else {
                     alert('Error saving program');
                 }
@@ -306,9 +322,27 @@
             }
         }
 
-        // Edit Program (placeholder)
-        function editProgram(id) {
-            alert('Edit functionality not implemented yet');
+        // Toggle Status
+        async function toggleStatus(id, currentStatus) {
+            try {
+                const response = await fetch(`${API_BASE}/programs/${id}`);
+                const program = await response.json();
+                const newStatus = !program.status;
+
+                const updateResponse = await fetch(`${API_BASE}/programs/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: program.name, status: newStatus })
+                });
+
+                if (updateResponse.ok) {
+                    loadProgramsTable();
+                } else {
+                    alert('Error updating status');
+                }
+            } catch (error) {
+                console.error('Error toggling status:', error);
+            }
         }
 
         // Delete Program
@@ -331,6 +365,11 @@
         }
 
         // Modal Events
+        document.querySelector('[data-bs-target="#programModal"]').addEventListener('click', function() {
+            document.getElementById('programForm').reset();
+            document.getElementById('programStatus').value = 'active';
+            editingId = null;
+        });
         document.getElementById('saveProgram').addEventListener('click', saveProgram);
 
         // Initialize
