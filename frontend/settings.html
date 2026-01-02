@@ -197,15 +197,15 @@
 
         // Show/hide Add User section based on currentUser's role and update topbar label
         (function guardAddUserSection() {
-            const current = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+            const current = JSON.parse(sessionStorage.getItem('user') || 'null');
             const addSection = document.getElementById('addUserSection');
             const notice = document.getElementById('addUserNotice');
             const label = document.getElementById('currentUserLabel');
             if (label) {
-                if (current && current.role) {
-                    // Show role (Faculty/Admin) per login; prefer role, fallback to username
-                    const roleText = (current.role.charAt(0).toUpperCase() + current.role.slice(1));
-                    label.textContent = roleText;
+                if (current && current.user_type) {
+                    // Show user type (Admin/Faculty) from the API response
+                    const userTypeText = (current.user_type.charAt(0).toUpperCase() + current.user_type.slice(1));
+                    label.textContent = userTypeText;
                 } else if (current && current.username) {
                     label.textContent = current.username;
                 } else {
@@ -214,7 +214,7 @@
             }
 
             if (!addSection || !notice) return;
-            if (current && current.role === 'admin') {
+            if (current && current.user_type === 'Admin') {
                 addSection.classList.remove('d-none');
                 notice.classList.add('d-none');
             } else {

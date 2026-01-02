@@ -34,25 +34,72 @@ def delete_program(db: Session, program_id: int):
 
 # Branches
 def get_branches(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Branch).offset(skip).limit(limit).all()
+    branches = db.query(models.Branch).offset(skip).limit(limit).all()
+    # Add program_name to each branch
+    for branch in branches:
+        mapping = db.query(models.ProgramBranchMapping).filter(models.ProgramBranchMapping.branch_id == branch.id).first()
+        if mapping:
+            program = db.query(models.Program).filter(models.Program.id == mapping.program_id).first()
+            branch.program_name = program.name if program else None
+    return branches
 
 def get_branch(db: Session, branch_id: int):
-    return db.query(models.Branch).filter(models.Branch.id == branch_id).first()
+    branch = db.query(models.Branch).filter(models.Branch.id == branch_id).first()
+    if branch:
+        mapping = db.query(models.ProgramBranchMapping).filter(models.ProgramBranchMapping.branch_id == branch.id).first()
+        if mapping:
+            program = db.query(models.Program).filter(models.Program.id == mapping.program_id).first()
+            branch.program_name = program.name if program else None
+    return branch
 
 def create_branch(db: Session, branch: schemas.BranchCreate):
-    db_branch = models.Branch(**branch.dict())
+    # Extract program_id
+    program_id = branch.program_id
+    branch_data = branch.dict()
+    del branch_data['program_id']
+    
+    db_branch = models.Branch(**branch_data)
     db.add(db_branch)
     db.commit()
     db.refresh(db_branch)
+    
+    # Create mapping
+    mapping = schemas.ProgramBranchMappingCreate(program_id=program_id, branch_id=db_branch.id)
+    create_program_branch_mapping(db, mapping)
+    
+    # Add program_name to response
+    program = db.query(models.Program).filter(models.Program.id == program_id).first()
+    db_branch.program_name = program.name if program else None
+    
     return db_branch
 
 def update_branch(db: Session, branch_id: int, branch: schemas.BranchCreate):
     db_branch = db.query(models.Branch).filter(models.Branch.id == branch_id).first()
     if db_branch:
-        for key, value in branch.dict().items():
+        # Extract program_id
+        program_id = branch.program_id
+        branch_data = branch.dict()
+        del branch_data['program_id']
+        
+        # Update branch fields
+        for key, value in branch_data.items():
             setattr(db_branch, key, value)
         db.commit()
         db.refresh(db_branch)
+        
+        # Update mapping
+        existing_mapping = db.query(models.ProgramBranchMapping).filter(models.ProgramBranchMapping.branch_id == branch_id).first()
+        if existing_mapping:
+            existing_mapping.program_id = program_id
+            db.commit()
+        else:
+            # Create new mapping if not exists
+            mapping = schemas.ProgramBranchMappingCreate(program_id=program_id, branch_id=branch_id)
+            create_program_branch_mapping(db, mapping)
+        
+        # Add program_name
+        program = db.query(models.Program).filter(models.Program.id == program_id).first()
+        db_branch.program_name = program.name if program else None
     return db_branch
 
 def delete_branch(db: Session, branch_id: int):
@@ -91,6 +138,17 @@ def delete_regulation(db: Session, regulation_id: int):
         db.delete(db_regulation)
         db.commit()
     return db_regulation
+
+# Program-Branch Mappings
+def get_program_branch_mappings(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.ProgramBranchMapping).offset(skip).limit(limit).all()
+
+def create_program_branch_mapping(db: Session, mapping: schemas.ProgramBranchMappingCreate):
+    db_mapping = models.ProgramBranchMapping(**mapping.dict())
+    db.add(db_mapping)
+    db.commit()
+    db.refresh(db_mapping)
+    return db_mapping
 
 # Program-Branch Mappings
 def get_program_branch_mappings(db: Session, skip: int = 0, limit: int = 100):

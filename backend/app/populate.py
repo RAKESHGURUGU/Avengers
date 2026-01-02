@@ -14,14 +14,19 @@ def populate_database():
                 crud.create_program(db, schemas.ProgramCreate(name=prog))
 
         # Add Branches if not exist
-        branches = [
-            {"name": "Computer Science", "code": "CSE"},
-            {"name": "Information Technology", "code": "IT"},
-            {"name": "Electronics", "code": "ECE"}
-        ]
-        for branch in branches:
-            if not db.query(models.Branch).filter(models.Branch.code == branch["code"]).first():
-                crud.create_branch(db, schemas.BranchCreate(**branch))
+        btech = db.query(models.Program).filter(models.Program.name == "B.Tech").first()
+        if btech:
+            branches = [
+                {"name": "Computer Science", "code": "CSE", "program_id": btech.id},
+                {"name": "Information Technology", "code": "IT", "program_id": btech.id},
+                {"name": "Electronics", "code": "ECE", "program_id": btech.id},
+                {"name": "Mechanical Engineering", "code": "ME", "program_id": btech.id},
+                {"name": "Civil Engineering", "code": "CE", "program_id": btech.id},
+                {"name": "Electrical Engineering", "code": "EE", "program_id": btech.id}
+            ]
+            for branch in branches:
+                if not db.query(models.Branch).filter(models.Branch.code == branch["code"]).first():
+                    crud.create_branch(db, schemas.BranchCreate(**branch))
 
         # Add Regulations if not exist
         regulations = ["AR23", "AR21", "AR20"]

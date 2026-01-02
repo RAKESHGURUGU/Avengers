@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine
 from . import models
-from .routers import programs, branches, courses, faculties, auth
+from .routers import programs, branches, courses, faculties, auth, regulations
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -20,6 +20,7 @@ app.include_router(programs.router)
 app.include_router(branches.router)
 app.include_router(courses.router)
 app.include_router(faculties.router)
+app.include_router(regulations.router)
 app.include_router(auth.router)
 
 @app.get("/")

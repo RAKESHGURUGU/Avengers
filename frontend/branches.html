@@ -182,6 +182,7 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Name</th>
+                                <th>Program</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -234,21 +235,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Sample programs data (in production this should come from the backend)
-        const programsData = [
-            { id: 1, name: 'B.Tech', status: 'active' },
-            { id: 2, name: 'M.Tech', status: 'active' },
-            { id: 3, name: 'MBA', status: 'inactive' },
-            { id: 4, name: 'MTECH', status: 'active' }
-        ];
+        // API Base URL
+        const API_BASE = 'http://127.0.0.1:8000';
 
-        // Sample branches data - each branch references a programId
-        let branchesData = [
-            { id: 1, name: 'Computer Science', programId: 1, status: 'active' },
-            { id: 2, name: 'Electrical Engineering', programId: 1, status: 'active' },
-            { id: 3, name: 'Mechanical Engineering', programId: 1, status: 'inactive' },
-            { id: 4, name: 'Civil Engineering', programId: 1, status: 'active' }
-        ];
+        let programsData = [];
+        let editingId = null;
 
         // DOM Elements
         const sidebar = document.getElementById('sidebar');
@@ -279,100 +270,180 @@
             });
         }
 
-        // Utility to get program name
-        function getProgramName(programId) {
-            const p = programsData.find(x => x.id === programId);
-            return p ? p.name : '—';
-        }
-
-        // Load Branches Table (accepts optional program filter)
-        function loadBranchesTable(filterProgramId = 'all') {
-            const tbody = document.getElementById('branchesTable');
-            let data = branchesData;
-            if (filterProgramId !== 'all') {
-                const idNum = parseInt(filterProgramId, 10);
-                data = data.filter(b => b.programId === idNum);
+        // Load Programs
+        async function loadPrograms() {
+            try {
+                const response = await fetch(`${API_BASE}/programs`);
+                programsData = await response.json();
+                const select = document.getElementById('branchProgramSelect');
+                select.innerHTML = programsData.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            } catch (error) {
+                console.error('Error loading programs:', error);
             }
-            tbody.innerHTML = data.map(branch => `
-                <tr>
-                    <td>${branch.id}</td>
-                    <td>${branch.name}</td>
-                    <td>${getProgramName(branch.programId)}</td>
-                    <td><span class="status-badge status-${branch.status}">${branch.status.toUpperCase()}</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary me-1 edit-branch-btn" data-id="${branch.id}" data-bs-toggle="modal" data-bs-target="#branchModal">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger delete-branch-btn" data-id="${branch.id}">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-
-            // Attach delete handlers
-            document.querySelectorAll('.delete-branch-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const id = parseInt(this.getAttribute('data-id'), 10);
-                    branchesData = branchesData.filter(b => b.id !== id);
-                    loadBranchesTable(document.getElementById('programFilter').value);
-                });
-            });
-
-            // Attach edit handlers to prefill modal
-            document.querySelectorAll('.edit-branch-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const id = parseInt(this.getAttribute('data-id'), 10);
-                    const branch = branchesData.find(b => b.id === id);
-                    if (!branch) return;
-                    document.getElementById('branchName').value = branch.name;
-                    document.getElementById('branchStatus').value = branch.status;
-                    document.getElementById('branchProgramSelect').value = branch.programId;
-                    // Store editing id on save button
-                    document.getElementById('saveBranch').setAttribute('data-edit-id', id);
-                });
-            });
         }
 
-        // Modal Events - Save Branch
-        document.getElementById('saveBranch').addEventListener('click', function() {
+        // Load Branches Table
+        async function loadBranchesTable() {
+            try {
+                const response = await fetch(`${API_BASE}/branches`);
+                const branches = await response.json();
+                const tbody = document.getElementById('branchesTable');
+                tbody.innerHTML = branches.map(branch => `
+                    <tr>
+                        <td>${branch.id}</td>
+                        <td>${branch.name}</td>
+                        <td>${branch.program_name || 'N/A'}</td>
+                        <td><span class="status-badge status-${branch.status ? 'active' : 'inactive'}">${branch.status ? 'ACTIVE' : 'INACTIVE'}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-warning me-1" onclick="toggleStatus(${branch.id}, ${branch.status})">
+                                <i class="bi bi-toggle-${branch.status ? 'on' : 'off'}"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editBranch(${branch.id})">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteBranch(${branch.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading branches:', error);
+            }
+        }
+
+        // Edit Branch
+        async function editBranch(id) {
+            try {
+                const response = await fetch(`${API_BASE}/branches/${id}`);
+                const branch = await response.json();
+
+                document.getElementById('branchName').value = branch.name;
+                document.getElementById('branchStatus').value = branch.status ? 'active' : 'inactive';
+                // For program, we need to find the mapping
+                // For now, assume it's B.Tech or something, or fetch mappings
+                document.getElementById('branchProgramSelect').value = 1; // Default to first
+
+                editingId = id;
+                new bootstrap.Modal(document.getElementById('branchModal')).show();
+            } catch (error) {
+                console.error('Error loading branch:', error);
+            }
+        }
+        
+
+        // Save Branch
+        async function saveBranch() {
             const name = document.getElementById('branchName').value.trim();
-            const status = document.getElementById('branchStatus').value;
             const programId = parseInt(document.getElementById('branchProgramSelect').value, 10);
-            if (!name) { alert('Please enter branch name'); return; }
+            const status = document.getElementById('branchStatus').value === 'active';
 
-            const editIdAttr = this.getAttribute('data-edit-id');
-            if (editIdAttr) {
-                // Edit existing
-                const editId = parseInt(editIdAttr, 10);
-                const branch = branchesData.find(b => b.id === editId);
-                if (branch) {
-                    branch.name = name;
-                    branch.status = status;
-                    branch.programId = programId;
-                }
-                this.removeAttribute('data-edit-id');
-            } else {
-                // Add new
-                const newId = branchesData.length ? Math.max(...branchesData.map(b => b.id)) + 1 : 1;
-                branchesData.push({ id: newId, name, programId, status });
+            if (!name || !programId) {
+                alert('Please enter branch name and select program');
+                return;
             }
 
-            bootstrap.Modal.getInstance(document.getElementById('branchModal')).hide();
-            // Reset form
-            document.getElementById('branchForm').reset();
-            // Reload table with current filter
-            loadBranchesTable(document.getElementById('programFilter').value);
-        });
+            const branchData = { name: name, code: name.substring(0, 3).toUpperCase(), program_id: programId };
+            let method = 'POST';
+            let url = `${API_BASE}/branches`;
 
-        // Program filter change
-        document.getElementById('programFilter').addEventListener('change', function() {
-            loadBranchesTable(this.value);
+            if (editingId) {
+                method = 'PUT';
+                url = `${API_BASE}/branches/${editingId}`;
+                branchData.status = status;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(branchData)
+                });
+
+                if (response.ok) {
+                    alert('Branch saved successfully!');
+                    document.getElementById('branchForm').reset();
+                    bootstrap.Modal.getInstance(document.getElementById('branchModal')).hide();
+                    loadBranchesTable();
+                    editingId = null;
+                } else {
+                    alert('Error saving branch');
+                }
+            } catch (error) {
+                console.error('Error saving branch:', error);
+            }
+        }
+
+        // Edit Branch
+        async function editBranch(id) {
+            try {
+                const response = await fetch(`${API_BASE}/branches/${id}`);
+                const branch = await response.json();
+
+                document.getElementById('branchName').value = branch.name;
+                document.getElementById('branchStatus').value = branch.status ? 'active' : 'inactive';
+                // For simplicity, set to first program
+                document.getElementById('branchProgramSelect').value = programsData[0]?.id || '';
+
+                editingId = id;
+                new bootstrap.Modal(document.getElementById('branchModal')).show();
+            } catch (error) {
+                console.error('Error loading branch:', error);
+            }
+        }
+
+        // Toggle Status
+        async function toggleStatus(id, currentStatus) {
+            const newStatus = !currentStatus;
+            try {
+                const response = await fetch(`${API_BASE}/branches/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: '', code: '', status: newStatus })
+                });
+
+                if (response.ok) {
+                    loadBranchesTable();
+                } else {
+                    alert('Error updating status');
+                }
+            } catch (error) {
+                console.error('Error toggling status:', error);
+            }
+        }
+
+        // Delete Branch
+        async function deleteBranch(id) {
+            if (confirm('Are you sure you want to delete this branch?')) {
+                try {
+                    const response = await fetch(`${API_BASE}/branches/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        loadBranchesTable();
+                    } else {
+                        alert('Error deleting branch');
+                    }
+                } catch (error) {
+                    console.error('Error deleting branch:', error);
+                }
+            }
+        }
+
+        // Modal Events
+        document.querySelector('[data-bs-target="#branchModal"]').addEventListener('click', function() {
+            document.getElementById('branchForm').reset();
+            document.getElementById('branchStatus').value = 'active';
+            editingId = null;
         });
+        document.getElementById('saveBranch').addEventListener('click', saveBranch);
 
         // Initialize
-        populateProgramSelects();
-        loadBranchesTable();
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPrograms();
+            loadBranchesTable();
+        });
     </script>
 </body>
 </html>

@@ -29,11 +29,12 @@ class BranchBase(BaseModel):
     code: str
 
 class BranchCreate(BranchBase):
-    pass
+    program_id: int
 
 class Branch(BranchBase):
     id: int
     status: bool
+    program_name: Optional[str] = None
 
     class Config:
         from_attributes = True

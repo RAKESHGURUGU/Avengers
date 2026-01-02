@@ -281,6 +281,24 @@
             }
         }
 
+        // Edit Program
+        async function editProgram(id) {
+            try {
+                const response = await fetch(`${API_BASE}/programs/${id}`);
+                const program = await response.json();
+
+                document.getElementById('programName').value = program.name;
+                document.getElementById('programStatus').value = program.status ? 'active' : 'inactive';
+                editingId = id;
+
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('programModal'));
+                modal.show();
+            } catch (error) {
+                console.error('Error loading program for edit:', error);
+            }
+        }
+
         // Add/Edit Program
         async function saveProgram() {
             const name = document.getElementById('programName').value;

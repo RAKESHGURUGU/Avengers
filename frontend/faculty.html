@@ -182,7 +182,8 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Name</th>
-                                <th>Department</th>
+                                <th>Employee ID</th>
+                                <th>Email</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -206,13 +207,41 @@
                 </div>
                 <div class="modal-body">
                     <form id="facultyForm">
-                        <div class="mb-3">
-                            <label class="form-label">Faculty Name</label>
-                            <input type="text" class="form-control" id="facultyName">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Honorific</label>
+                                <select class="form-select" id="facultyHonorific">
+                                    <option value="Dr.">Dr.</option>
+                                    <option value="Mr.">Mr.</option>
+                                    <option value="Mrs.">Mrs.</option>
+                                    <option value="Ms.">Ms.</option>
+                                    <option value="Prof.">Prof.</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Name</label>
+                                <input type="text" class="form-control" id="facultyName">
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Department</label>
-                            <input type="text" class="form-control" id="facultyDepartment">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Employee ID</label>
+                                <input type="text" class="form-control" id="facultyEmpid">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="text" class="form-control" id="facultyPhone">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" id="facultyUsername">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="facultyEmail">
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Status</label>
@@ -233,12 +262,174 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Sample data
-        const facultyData = [
-            { id: 1, name: 'Dr. John Doe', department: 'Computer Science', status: 'active' },
-            { id: 2, name: 'Prof. Jane Smith', department: 'Mathematics', status: 'active' },
-            { id: 3, name: 'Dr. Alice Johnson', department: 'Physics', status: 'inactive' }
-        ];
+        // API Base URL
+        const API_BASE = 'http://127.0.0.1:8000';
+
+        let editingId = null;
+
+        // Load Faculty Table
+        async function loadFacultyTable() {
+            try {
+                const response = await fetch(`${API_BASE}/faculties`);
+                const faculties = await response.json();
+                const tbody = document.getElementById('facultyTable');
+                tbody.innerHTML = faculties.map(faculty => `
+                    <tr>
+                        <td>${faculty.id}</td>
+                        <td>${faculty.honorific} ${faculty.name}</td>
+                        <td>${faculty.empid}</td>
+                        <td>${faculty.email}</td>
+                        <td><span class="status-badge status-${faculty.status ? 'active' : 'inactive'}">${faculty.status ? 'ACTIVE' : 'INACTIVE'}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-warning me-1" onclick="toggleStatus(${faculty.id}, ${faculty.status})">
+                                <i class="bi bi-toggle-${faculty.status ? 'on' : 'off'}"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editFaculty(${faculty.id})">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteFaculty(${faculty.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading faculties:', error);
+            }
+        }
+
+        // Edit Faculty
+        async function editFaculty(id) {
+            try {
+                const response = await fetch(`${API_BASE}/faculties/${id}`);
+                const faculty = await response.json();
+
+                document.getElementById('facultyHonorific').value = faculty.honorific;
+                document.getElementById('facultyName').value = faculty.name;
+                document.getElementById('facultyEmpid').value = faculty.empid;
+                document.getElementById('facultyPhone').value = faculty.phone;
+                document.getElementById('facultyUsername').value = faculty.username;
+                document.getElementById('facultyEmail').value = faculty.email;
+                document.getElementById('facultyStatus').value = faculty.status ? 'active' : 'inactive';
+                editingId = id;
+
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('facultyModal'));
+                modal.show();
+            } catch (error) {
+                console.error('Error loading faculty for edit:', error);
+            }
+        }
+
+        // Add/Edit Faculty
+        async function saveFaculty() {
+            const honorific = document.getElementById('facultyHonorific').value;
+            const name = document.getElementById('facultyName').value;
+            const empid = document.getElementById('facultyEmpid').value;
+            const phone = document.getElementById('facultyPhone').value;
+            const username = document.getElementById('facultyUsername').value;
+            const email = document.getElementById('facultyEmail').value;
+            const status = document.getElementById('facultyStatus').value === 'active';
+
+            if (!name || !empid || !username || !email) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const facultyData = {
+                user_type: 'Faculty',
+                honorific: honorific,
+                name: name,
+                empid: empid,
+                phone: phone,
+                username: username,
+                email: email,
+                password_hash: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj8GhJDQ9V1e' // Default hashed password
+            };
+
+            let method = 'POST';
+            let url = `${API_BASE}/faculties`;
+
+            if (editingId) {
+                method = 'PUT';
+                url = `${API_BASE}/faculties/${editingId}`;
+                facultyData.status = status;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(facultyData)
+                });
+
+                if (response.ok) {
+                    alert('Faculty saved successfully!');
+                    document.getElementById('facultyForm').reset();
+                    bootstrap.Modal.getInstance(document.getElementById('facultyModal')).hide();
+                    loadFacultyTable();
+                    editingId = null;
+                } else {
+                    alert('Error saving faculty');
+                }
+            } catch (error) {
+                console.error('Error saving faculty:', error);
+            }
+        }
+
+        // Toggle Status
+        async function toggleStatus(id, currentStatus) {
+            try {
+                const response = await fetch(`${API_BASE}/faculties/${id}`);
+                const faculty = await response.json();
+                const newStatus = !faculty.status;
+
+                const updateData = {
+                    user_type: faculty.user_type,
+                    honorific: faculty.honorific,
+                    name: faculty.name,
+                    empid: faculty.empid,
+                    phone: faculty.phone,
+                    username: faculty.username,
+                    email: faculty.email,
+                    password_hash: faculty.password_hash,
+                    status: newStatus
+                };
+
+                const updateResponse = await fetch(`${API_BASE}/faculties/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (updateResponse.ok) {
+                    loadFacultyTable();
+                } else {
+                    alert('Error updating status');
+                }
+            } catch (error) {
+                console.error('Error toggling status:', error);
+            }
+        }
+
+        // Delete Faculty
+        async function deleteFaculty(id) {
+            if (confirm('Are you sure you want to delete this faculty?')) {
+                try {
+                    const response = await fetch(`${API_BASE}/faculties/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        loadFacultyTable();
+                    } else {
+                        alert('Error deleting faculty');
+                    }
+                } catch (error) {
+                    console.error('Error deleting faculty:', error);
+                }
+            }
+        }
 
         // DOM Elements
         const sidebar = document.getElementById('sidebar');
@@ -250,36 +441,16 @@
             sidebar.classList.toggle('mobile-open');
         });
 
-        // Load Faculty Table
-        function loadFacultyTable() {
-            const tbody = document.getElementById('facultyTable');
-            tbody.innerHTML = facultyData.map(faculty => `
-                <tr>
-                    <td>${faculty.id}</td>
-                    <td>${faculty.name}</td>
-                    <td>${faculty.department}</td>
-                    <td><span class="status-badge status-${faculty.status}">${faculty.status.toUpperCase()}</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#facultyModal">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
         // Modal Events
-        document.getElementById('saveFaculty').addEventListener('click', function() {
-            // Simulate save
-            alert('Faculty saved successfully!');
-            bootstrap.Modal.getInstance(document.getElementById('facultyModal')).hide();
+        document.querySelector('[data-bs-target="#facultyModal"]').addEventListener('click', function() {
+            document.getElementById('facultyForm').reset();
+            document.getElementById('facultyStatus').value = 'active';
+            editingId = null;
         });
+        document.getElementById('saveFaculty').addEventListener('click', saveFaculty);
 
         // Initialize
-        loadFacultyTable();
+        document.addEventListener('DOMContentLoaded', loadFacultyTable);
     </script>
 </body>
 </html>
