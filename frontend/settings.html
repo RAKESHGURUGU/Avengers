@@ -59,8 +59,8 @@
             <a href="faculty-dashboard.html" class="btn btn-link">
                 <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
             </a>
-            <div class="ms-auto d-flex align-items-center">
-                <span class="me-3">User</span>
+                <div class="ms-auto d-flex align-items-center">
+                    <span class="me-3" id="currentUserLabel">User</span>
                 <div class="dropdown">
                     <a class="dropdown-toggle text-dark text-decoration-none" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-person-circle fs-4"></i>
@@ -94,6 +94,43 @@
             </div>
             <button type="submit" class="btn btn-primary w-100">Change Password</button>
         </form>
+
+        <hr class="my-4">
+
+        <h2 class="h4 mb-3">Add User (Faculty / Admin)</h2>
+        <p class="text-muted small">Create a new user and assign role. (Demo: users stored in localStorage.)</p>
+        <div id="addUserSection">
+            <form id="addUserForm">
+            <div class="mb-3">
+                <label for="newUsername" class="form-label">Username</label>
+                <input type="text" class="form-control" id="newUsername" name="newUsername" required>
+            </div>
+            <div class="mb-3">
+                <label for="fullName" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="fullName" name="fullName">
+            </div>
+            <div class="mb-3">
+                <label for="userRole" class="form-label">Role</label>
+                <select class="form-select" id="userRole" name="userRole">
+                    <option value="faculty">Faculty</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="userPassword" class="form-label">Password</label>
+                <input type="password" class="form-control" id="userPassword" name="userPassword" required>
+            </div>
+            <div class="mb-3">
+                <label for="userConfirmPassword" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control" id="userConfirmPassword" name="userConfirmPassword" required>
+            </div>
+            <button type="submit" class="btn btn-success w-100">Add User</button>
+            </form>
+        </div>
+
+        <div id="addUserNotice" class="alert alert-info d-none" role="alert">
+            Only administrators can add new users. You do not have permission to perform this action.
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -114,6 +151,77 @@
 
             alert('Password change request submitted.'); // Placeholder
         });
+
+        // Add User form handling
+        document.getElementById('addUserForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            // Server-side enforcement is required in real apps. This is a client-side guard.
+            const current = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+            if (!current || current.role !== 'admin') {
+                alert('You are not authorized to add users. Only admins can perform this action.');
+                return;
+            }
+
+            const username = document.getElementById('newUsername').value.trim();
+            const fullName = document.getElementById('fullName').value.trim();
+            const role = document.getElementById('userRole').value;
+            const password = document.getElementById('userPassword').value;
+            const confirm = document.getElementById('userConfirmPassword').value;
+
+            if (!username) { alert('Please enter a username.'); return; }
+            if (password !== confirm) { alert('Passwords do not match.'); return; }
+
+            // WARNING: Storing plaintext passwords in localStorage is insecure. This is for demo only.
+            const stored = JSON.parse(localStorage.getItem('users') || '[]');
+            if (stored.find(u => u.username === username)) {
+                alert('Username already exists. Choose a different username.');
+                return;
+            }
+
+            const newUser = {
+                id: stored.length ? Math.max(...stored.map(u => u.id)) + 1 : 1,
+                username,
+                fullName,
+                role,
+                password, // demo only
+                createdAt: new Date().toISOString()
+            };
+
+            stored.push(newUser);
+            localStorage.setItem('users', JSON.stringify(stored));
+            console.log('User added:', newUser);
+            alert('User added successfully.');
+            // Reset form
+            document.getElementById('addUserForm').reset();
+        });
+
+        // Show/hide Add User section based on currentUser's role and update topbar label
+        (function guardAddUserSection() {
+            const current = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+            const addSection = document.getElementById('addUserSection');
+            const notice = document.getElementById('addUserNotice');
+            const label = document.getElementById('currentUserLabel');
+            if (label) {
+                if (current && current.role) {
+                    // Show role (Faculty/Admin) per login; prefer role, fallback to username
+                    const roleText = (current.role.charAt(0).toUpperCase() + current.role.slice(1));
+                    label.textContent = roleText;
+                } else if (current && current.username) {
+                    label.textContent = current.username;
+                } else {
+                    label.textContent = 'Guest';
+                }
+            }
+
+            if (!addSection || !notice) return;
+            if (current && current.role === 'admin') {
+                addSection.classList.remove('d-none');
+                notice.classList.add('d-none');
+            } else {
+                addSection.classList.add('d-none');
+                notice.classList.remove('d-none');
+            }
+        })();
     </script>
 </body>
 </html>

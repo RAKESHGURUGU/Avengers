@@ -168,10 +168,15 @@
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h2 class="fw-bold text-dark mb-0">Branches</h2>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#branchModal">
+                                <h2 class="fw-bold text-dark mb-0">Branches</h2>
+                                <div class="d-flex align-items-center">
+                                    <select class="form-select me-2" id="programFilter" style="width:200px;">
+                                        <option value="all">All Programs</option>
+                                    </select>
+                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#branchModal">
                             <i class="bi bi-plus-circle me-2"></i>Add Branch
-                        </button>
+                                    </button>
+                                </div>
                     </div>
                 </div>
             </div>
@@ -182,6 +187,7 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Name</th>
+                                <th>Program</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -210,6 +216,12 @@
                             <input type="text" class="form-control" id="branchName">
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Program</label>
+                            <select class="form-select" id="branchProgramSelect">
+                                <!-- Filled by JS -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Status</label>
                             <select class="form-select" id="branchStatus">
                                 <option value="active">Active</option>
@@ -228,11 +240,20 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Sample data
-        const branchesData = [
-            { id: 1, name: 'Computer Science', status: 'active' },
-            { id: 2, name: 'Electrical Engineering', status: 'active' },
-            { id: 3, name: 'Mechanical Engineering', status: 'inactive' }
+        // Sample programs data (in production this should come from the backend)
+        const programsData = [
+            { id: 1, name: 'B.Tech', status: 'active' },
+            { id: 2, name: 'M.Tech', status: 'active' },
+            { id: 3, name: 'MBA', status: 'inactive' },
+            { id: 4, name: 'MTECH', status: 'active' }
+        ];
+
+        // Sample branches data - each branch references a programId
+        let branchesData = [
+            { id: 1, name: 'Computer Science', programId: 1, status: 'active' },
+            { id: 2, name: 'Electrical Engineering', programId: 1, status: 'active' },
+            { id: 3, name: 'Mechanical Engineering', programId: 1, status: 'inactive' },
+            { id: 4, name: 'Civil Engineering', programId: 1, status: 'active' }
         ];
 
         // DOM Elements
@@ -245,34 +266,118 @@
             sidebar.classList.toggle('mobile-open');
         });
 
-        // Load Branches Table
-        function loadBranchesTable() {
+        // Populate program selects (filter and modal)
+        function populateProgramSelects() {
+            const filter = document.getElementById('programFilter');
+            const modalSelect = document.getElementById('branchProgramSelect');
+            if (!filter || !modalSelect) return;
+            // Clear existing options except 'all'
+            filter.innerHTML = '<option value="all">All Programs</option>';
+            modalSelect.innerHTML = '';
+            programsData.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.name;
+                modalSelect.appendChild(opt);
+
+                const opt2 = opt.cloneNode(true);
+                filter.appendChild(opt2);
+            });
+        }
+
+        // Utility to get program name
+        function getProgramName(programId) {
+            const p = programsData.find(x => x.id === programId);
+            return p ? p.name : '—';
+        }
+
+        // Load Branches Table (accepts optional program filter)
+        function loadBranchesTable(filterProgramId = 'all') {
             const tbody = document.getElementById('branchesTable');
-            tbody.innerHTML = branchesData.map(branch => `
+            let data = branchesData;
+            if (filterProgramId !== 'all') {
+                const idNum = parseInt(filterProgramId, 10);
+                data = data.filter(b => b.programId === idNum);
+            }
+            tbody.innerHTML = data.map(branch => `
                 <tr>
                     <td>${branch.id}</td>
                     <td>${branch.name}</td>
+                    <td>${getProgramName(branch.programId)}</td>
                     <td><span class="status-badge status-${branch.status}">${branch.status.toUpperCase()}</span></td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#branchModal">
+                        <button class="btn btn-sm btn-outline-primary me-1 edit-branch-btn" data-id="${branch.id}" data-bs-toggle="modal" data-bs-target="#branchModal">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger">
+                        <button class="btn btn-sm btn-outline-danger delete-branch-btn" data-id="${branch.id}">
                             <i class="bi bi-trash"></i>
                         </button>
                     </td>
                 </tr>
             `).join('');
+
+            // Attach delete handlers
+            document.querySelectorAll('.delete-branch-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'), 10);
+                    branchesData = branchesData.filter(b => b.id !== id);
+                    loadBranchesTable(document.getElementById('programFilter').value);
+                });
+            });
+
+            // Attach edit handlers to prefill modal
+            document.querySelectorAll('.edit-branch-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'), 10);
+                    const branch = branchesData.find(b => b.id === id);
+                    if (!branch) return;
+                    document.getElementById('branchName').value = branch.name;
+                    document.getElementById('branchStatus').value = branch.status;
+                    document.getElementById('branchProgramSelect').value = branch.programId;
+                    // Store editing id on save button
+                    document.getElementById('saveBranch').setAttribute('data-edit-id', id);
+                });
+            });
         }
 
-        // Modal Events
+        // Modal Events - Save Branch
         document.getElementById('saveBranch').addEventListener('click', function() {
-            // Simulate save
-            alert('Branch saved successfully!');
+            const name = document.getElementById('branchName').value.trim();
+            const status = document.getElementById('branchStatus').value;
+            const programId = parseInt(document.getElementById('branchProgramSelect').value, 10);
+            if (!name) { alert('Please enter branch name'); return; }
+
+            const editIdAttr = this.getAttribute('data-edit-id');
+            if (editIdAttr) {
+                // Edit existing
+                const editId = parseInt(editIdAttr, 10);
+                const branch = branchesData.find(b => b.id === editId);
+                if (branch) {
+                    branch.name = name;
+                    branch.status = status;
+                    branch.programId = programId;
+                }
+                this.removeAttribute('data-edit-id');
+            } else {
+                // Add new
+                const newId = branchesData.length ? Math.max(...branchesData.map(b => b.id)) + 1 : 1;
+                branchesData.push({ id: newId, name, programId, status });
+            }
+
             bootstrap.Modal.getInstance(document.getElementById('branchModal')).hide();
+            // Reset form
+            document.getElementById('branchForm').reset();
+            // Reload table with current filter
+            loadBranchesTable(document.getElementById('programFilter').value);
+        });
+
+        // Program filter change
+        document.getElementById('programFilter').addEventListener('change', function() {
+            loadBranchesTable(this.value);
         });
 
         // Initialize
+        populateProgramSelects();
         loadBranchesTable();
     </script>
 </body>
