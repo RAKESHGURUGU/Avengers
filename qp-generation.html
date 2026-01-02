@@ -189,6 +189,8 @@
                                         <label class="form-label">Program *</label>
                                         <select class="form-select" id="programSelect">
                                             <option>Select Program</option>
+                                            <option value="1">B.Tech</option>
+                                            <option value="2">M.Tech</option>
                                         </select>
                                     </div>
                                     <div class="col-md-6">
@@ -212,15 +214,27 @@
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Regulation</label>
-                                        <input type="text" class="form-control" id="regulation" readonly>
+                                        <select class="form-select" id="regulation">
+                                            <option>AR23</option>
+                                            <option>AR20</option>
+                                            <option>AR18</option>
+                                        </select>
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Year</label>
-                                        <input type="text" class="form-control" id="year" readonly>
+                                        <select class="form-select" id="year">
+                                            <option>I</option>
+                                            <option>II</option>
+                                            <option>III</option>
+                                            <option>IV</option>
+                                        </select>
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Semester</label>
-                                        <input type="text" class="form-control" id="semester" readonly>
+                                        <select class="form-select" id="semester">
+                                            <option>I</option>
+                                            <option>II</option>
+                                        </select>
                                     </div>
                                     <div class="col-12">
                                         <label class="form-label">Academic Year</label>
@@ -257,6 +271,9 @@
             1: [
                 { id: 1, name: 'Data Structures', regulation: 'AR23', year: 'II', semester: 'I' },
                 { id: 2, name: 'Python Programming', regulation: 'AR23', year: 'I', semester: 'II' }
+            ],
+            2: [
+                { id: 3, name: 'Advanced Algorithms', regulation: 'AR23', year: 'I', semester: 'I' }
             ]
         };
 
@@ -280,18 +297,9 @@
             
             if (programId && programCourses[programId]) {
                 programCourses[programId].forEach(course => {
-                    courseSelect.innerHTML += `<option value="${course.id}" data-reg="${course.regulation}" data-year="${course.year}" data-sem="${course.semester}">${course.name}</option>`;
+                    courseSelect.innerHTML += `<option value="${course.id}">${course.name}</option>`;
                 });
                 courseSelect.disabled = false;
-            }
-        });
-
-        document.getElementById('courseSelect').addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            if (selectedOption.dataset.reg) {
-                document.getElementById('regulation').value = selectedOption.dataset.reg;
-                document.getElementById('year').value = selectedOption.dataset.year;
-                document.getElementById('semester').value = selectedOption.dataset.sem;
             }
         });
 

@@ -88,6 +88,15 @@
         .form-floating > label {
             color: #6b7280;
         }
+        .question-item {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .question-input {
+            margin-top: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -141,7 +150,7 @@
         <div class="container-fluid p-4">
             <div class="row mb-4">
                 <div class="col-12">
-                    <h2 class="fw-bold text-dark mb-0">Question Paper Generation</h2>
+                    <h2 class="fw-bold text-dark mb-0">Question Generation</h2>
                 </div>
             </div>
             <div class="row">
@@ -175,10 +184,71 @@
                                         <label class="form-label">Academic Year</label>
                                         <input type="text" class="form-control" id="academicYear" value="2025-2026" readonly>
                                     </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Unit</label>
+                                        <select class="form-select" id="unitSelect">
+                                            <option>Unit 1</option>
+                                            <option>Unit 2</option>
+                                            <option>Unit 3</option>
+                                            <option>Unit 4</option>
+                                            <option>Unit 5</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">CO (Course Outcome)</label>
+                                        <select class="form-select" id="coSelect">
+                                            <option>CO1</option>
+                                            <option>CO2</option>
+                                            <option>CO3</option>
+                                            <option>CO4</option>
+                                            <option>CO5</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Bloom's Taxonomy</label>
+                                        <select class="form-select" id="bloomSelect">
+                                            <option>Remember</option>
+                                            <option>Understand</option>
+                                            <option>Apply</option>
+                                            <option>Analyze</option>
+                                            <option>Evaluate</option>
+                                            <option>Create</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Difficulty</label>
+                                        <select class="form-select" id="difficultySelect">
+                                            <option>Easy</option>
+                                            <option>Medium</option>
+                                            <option>Hard</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Marks</label>
+                                        <select class="form-select" id="marksSelect">
+                                            <option>2</option>
+                                            <option>5</option>
+                                            <option>10</option>
+                                            <option>15</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Question Type</label>
+                                        <select class="form-select" id="questionTypeSelect">
+                                            <option>Text</option>
+                                            <option>Image</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="question-input" id="questionInputContainer">
+                                    <!-- Dynamic input will be added here -->
                                 </div>
                                 <div class="mt-4">
                                     <button type="button" class="btn btn-success" id="generateTemplate">
                                         <i class="bi bi-magic me-2"></i>Generate Template
+                                    </button>
+                                    <button type="button" class="btn btn-primary ms-2" id="addQuestion">
+                                        <i class="bi bi-plus-circle me-2"></i>Add Question
                                     </button>
                                 </div>
                             </form>
@@ -191,7 +261,7 @@
                             <h6 class="mb-0">Preview</h6>
                         </div>
                         <div class="card-body" id="qpPreview">
-                            <p class="text-muted">Select Course to see preview...</p>
+                            <p class="text-muted">Select options and add questions...</p>
                         </div>
                     </div>
                 </div>
@@ -205,27 +275,93 @@
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
         const toggleSidebar = document.getElementById('toggleSidebar');
+        const qpPreview = document.getElementById('qpPreview');
+        const addQuestionBtn = document.getElementById('addQuestion');
+        const generateTemplateBtn = document.getElementById('generateTemplate');
+        const questionTypeSelect = document.getElementById('questionTypeSelect');
+        const questionInputContainer = document.getElementById('questionInputContainer');
 
         // Toggle Sidebar
         toggleSidebar.addEventListener('click', () => {
             sidebar.classList.toggle('mobile-open');
         });
 
-        document.getElementById('generateTemplate').addEventListener('click', function() {
-            const preview = document.getElementById('qpPreview');
-            preview.innerHTML = `
+        // Update input based on question type
+        questionTypeSelect.addEventListener('change', () => {
+            const type = questionTypeSelect.value;
+            if (type === 'Text') {
+                questionInputContainer.innerHTML = `
+                    <label class="form-label">Question Text</label>
+                    <textarea class="form-control" id="questionText" rows="3" placeholder="Enter your question here..."></textarea>
+                `;
+            } else if (type === 'Image') {
+                questionInputContainer.innerHTML = `
+                    <label class="form-label">Upload Question Image</label>
+                    <input type="file" class="form-control" id="questionImage" accept="image/*">
+                `;
+            }
+        });
+
+        // Initialize input on load
+        questionTypeSelect.dispatchEvent(new Event('change'));
+
+        // Add Question
+        addQuestionBtn.addEventListener('click', () => {
+            const course = document.getElementById('courseSelect').value;
+            const unit = document.getElementById('unitSelect').value;
+            const co = document.getElementById('coSelect').value;
+            const bloom = document.getElementById('bloomSelect').value;
+            const difficulty = document.getElementById('difficultySelect').value;
+            const marks = document.getElementById('marksSelect').value;
+            const type = document.getElementById('questionTypeSelect').value;
+
+            let questionContent = '';
+            if (type === 'Text') {
+                const text = document.getElementById('questionText').value;
+                questionContent = text || 'Sample text question.';
+            } else if (type === 'Image') {
+                const file = document.getElementById('questionImage').files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        questionContent = `<img src="${e.target.result}" alt="Question Image" class="img-fluid">`;
+                        addQuestionToPreview(questionContent, unit, co, bloom, difficulty, marks);
+                    };
+                    reader.readAsDataURL(file);
+                    return; // Wait for reader
+                } else {
+                    questionContent = '<img src="placeholder-image.jpg" alt="Question Image" class="img-fluid">';
+                }
+            }
+
+            addQuestionToPreview(questionContent, unit, co, bloom, difficulty, marks);
+        });
+
+        function addQuestionToPreview(content, unit, co, bloom, difficulty, marks) {
+            const questionItem = document.createElement('div');
+            questionItem.className = 'question-item';
+            questionItem.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>${unit} - ${co} (${bloom}, ${difficulty}, ${marks} Marks)</strong><br>
+                        ${content}
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger" onclick="this.parentElement.parentElement.remove()">Remove</button>
+                </div>
+            `;
+
+            qpPreview.appendChild(questionItem);
+        }
+
+        // Generate Template
+        generateTemplateBtn.addEventListener('click', function() {
+            qpPreview.innerHTML = `
                 <div class="alert alert-success">
                     <h6>Question Paper Template Generated!</h6>
-                    <p>Select CO, Bloom Level, Difficulty, and Marks for each question.</p>
+                    <p>Add questions using the form above.</p>
                 </div>
-                <div class="qp-template">
-                    <div class="mb-3">
-                        <label>Q1 (10 Marks)</label>
-                        <select class="form-select">
-                            <option>Random Question</option>
-                        </select>
-                    </div>
-                    <!-- More dynamic questions -->
+                <div id="questionsList">
+                    <!-- Questions will be added here -->
                 </div>
             `;
         });
