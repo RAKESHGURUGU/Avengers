@@ -127,9 +127,28 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // NOTE: This demo stores credentials in localStorage and logs them to the console.
+        // This is insecure for real applications. Use server-side authentication and never
+        // store plaintext passwords in localStorage for production.
+
+        function saveCredentials(key, username, password) {
+            const creds = {
+                username: username || '',
+                password: password || '',
+                savedAt: new Date().toISOString()
+            };
+            // Save as JSON string
+            localStorage.setItem(key, JSON.stringify(creds));
+            // Print stored data to console for debugging/demo
+            console.log(key + ' saved:', creds);
+        }
+
         // Admin Login
         document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+            saveCredentials('adminCredentials', username, password);
             // Simulate login
             alert('Admin login successful!');
             window.location.href = 'index.html';
@@ -138,9 +157,24 @@
         // Faculty Login
         document.getElementById('facultyLoginForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            const username = document.getElementById('facultyUsername').value;
+            const password = document.getElementById('facultyPassword').value;
+            saveCredentials('facultyCredentials', username, password);
             // Simulate login
             alert('Faculty login successful!');
             window.location.href = 'faculty-dashboard.html';
+        });
+
+        // Print any previously stored credentials to console on page load (convenience)
+        window.addEventListener('load', function() {
+            try {
+                const a = localStorage.getItem('adminCredentials');
+                const f = localStorage.getItem('facultyCredentials');
+                if (a) console.log('Stored adminCredentials:', JSON.parse(a));
+                if (f) console.log('Stored facultyCredentials:', JSON.parse(f));
+            } catch (err) {
+                console.warn('Could not read stored credentials:', err);
+            }
         });
     </script>
 </body>
