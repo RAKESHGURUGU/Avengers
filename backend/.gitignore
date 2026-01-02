@@ -1,5 +1,5 @@
 venv
-websagate.db
+websaga.db
 __pycache__/
 ./app/__pycache__/*
 ./backend/__pycache__/*
