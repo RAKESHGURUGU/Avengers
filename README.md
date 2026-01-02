@@ -7,7 +7,7 @@ first do
 for first time
 
 after every time
->> venv/Scripts/activate
+>> venv\Scripts\activate
 >> pip install requirements.txt
 
 run command
