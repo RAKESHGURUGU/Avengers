@@ -179,9 +179,13 @@
                         <div class="card-header">
                             <h5 class="mb-0">Recent Activities</h5>
                         </div>
-                        <div class="card-body">
-                            <p>Faculty dashboard content here.</p>
-                        </div>
+                                <div class="card-body">
+                                    <div id="recentActivitiesContainer">
+                                        <ul class="list-group" id="recentActivities">
+                                            <li class="list-group-item">Loading recent activities...</li>
+                                        </ul>
+                                    </div>
+                                </div>
                     </div>
                 </div>
             </div>
@@ -226,8 +230,70 @@
             }
         }
 
-        // Load stats on page load
-        document.addEventListener('DOMContentLoaded', loadDashboardStats);
+        // Load Recent Activities: fetch generated QPs and combine with local activities
+        async function loadRecentActivities() {
+            const container = document.getElementById('recentActivities');
+            if (!container) return;
+            container.innerHTML = '<li class="list-group-item">Loading recent activities...</li>';
+
+            const activities = [];
+
+            // Try fetching generated QPs from backend
+            try {
+                const resp = await fetch(`${API_BASE}/generated_qps/`);
+                if (resp.ok) {
+                    const qps = await resp.json();
+                    // Sort by created_at descending if present
+                    qps.sort((a,b) => { const A = a.created_at || ''; const B = b.created_at || ''; return (B.localeCompare(A)); });
+                    qps.slice(0,5).forEach(q => {
+                        activities.push({
+                            type: 'QP Saved',
+                            text: `${q.assessment_type} - ${q.academic_year || ''}`,
+                            when: q.created_at || ''
+                        });
+                    });
+                }
+            } catch (err) {
+                console.warn('Could not fetch generated QPs:', err);
+            }
+
+            // Add local activities from localStorage (if any)
+            try {
+                const localActs = JSON.parse(localStorage.getItem('activities') || '[]');
+                if (Array.isArray(localActs)) {
+                    localActs.slice(-5).reverse().forEach(a => activities.push(a));
+                }
+            } catch (err) {
+                console.warn('Error reading local activities:', err);
+            }
+
+            // If still empty, show demo entries
+            if (activities.length === 0) {
+                activities.push({ type: 'Login', text: 'Logged in as Faculty', when: new Date().toISOString() });
+                activities.push({ type: 'QP Generated', text: 'Sample QP created', when: new Date().toISOString() });
+            }
+
+            // Render
+            container.innerHTML = '';
+            activities.slice(0,10).forEach(act => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-start';
+                li.innerHTML = `
+                    <div>
+                        <div class="fw-bold">${act.type}</div>
+                        <div class="text-muted small">${act.text}</div>
+                    </div>
+                    <div class="text-muted small">${act.when ? new Date(act.when).toLocaleString() : ''}</div>
+                `;
+                container.appendChild(li);
+            });
+        }
+
+        // Load stats and recent activities on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardStats();
+            loadRecentActivities();
+        });
     </script>
 </body>
 </html>

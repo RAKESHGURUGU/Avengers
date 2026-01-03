@@ -11,14 +11,44 @@
             --primary-color: #1e3a8a;
             --secondary-color: #3b82f6;
             --accent-color: #10b981;
-            --danger-color: #ef4444;
-            --warning-color: #f59e0b;
             --sidebar-width: 280px;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8fafc;
         }
+
+        /* PRINT STYLES - CRITICAL FOR PDF */
+        @media print {
+            * { 
+                -webkit-print-color-adjust: exact !important; 
+                color-adjust: exact !important; 
+                print-color-adjust: exact !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            html, body { 
+                width: 100% !important;
+                height: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .sidebar, .topbar, .no-print, button, .card, .row:not(.qp-content), .container-fluid, .p-4 { 
+                display: none !important; 
+            }
+            .main-content { 
+                margin-left: 0 !important; 
+                padding: 0 !important;
+                width: 100% !important;
+            }
+            .qp-print-wrapper {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                page-break-after: always;
+            }
+        }
+
         .sidebar {
             position: fixed;
             top: 0;
@@ -30,86 +60,144 @@
             transition: transform 0.3s ease;
             z-index: 1030;
         }
-        .sidebar.collapsed {
-            transform: translateX(-100%);
-        }
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.4rem;
-        }
-        .nav-link {
-            color: rgba(255,255,255,0.85) !important;
-            border-radius: 8px;
-            margin: 4px 12px;
-            padding: 12px 16px;
-        }
-        .nav-link:hover, .nav-link.active {
-            background: rgba(255,255,255,0.15);
-            color: white !important;
-        }
-        .main-content {
-            margin-left: var(--sidebar-width);
-            transition: margin-left 0.3s ease;
-            min-height: 100vh;
-        }
-        .main-content.expanded {
-            margin-left: 0;
-        }
-        .topbar {
-            background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 1rem 2rem;
-        }
-        .card {
-            border: none;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            border-radius: 12px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-        }
-        .stat-card {
-            text-align: center;
-            padding: 2rem 1rem;
-        }
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-        .status-active { background: #dcfce7; color: #166534; }
-        .status-inactive { background: #fee2e2; color: #dc2626; }
-        .btn-primary {
-            background: var(--secondary-color);
-            border-color: var(--secondary-color);
-        }
-        .table thead th {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            font-weight: 600;
-        }
+        .sidebar.collapsed { transform: translateX(-100%); }
+        .navbar-brand { font-weight: 700; font-size: 1.4rem; }
+        .nav-link { color: rgba(255,255,255,0.85) !important; border-radius: 8px; margin: 4px 12px; padding: 12px 16px; }
+        .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.15); color: white !important; }
+        .main-content { margin-left: var(--sidebar-width); transition: margin-left 0.3s ease; min-height: 100vh; }
+        .main-content.expanded { margin-left: 0; }
+        .topbar { background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 1rem 2rem; }
+        .card { border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-radius: 12px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
         @media (max-width: 992px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            .sidebar.mobile-open {
-                transform: translateX(0);
-            }
-            .main-content {
-                margin-left: 0 !important;
-            }
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; }
         }
-        .form-floating > label {
-            color: #6b7280;
+
+        /* QUESTION PAPER STYLES - FIXED ALIGNMENT */
+        .qp-print-wrapper {
+            background: white;
+            width: 210mm;
+            height: 297mm;
+            margin: 0 auto;
+            padding: 20mm;
+            box-sizing: border-box;
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.4;
+        }
+
+        .qp-header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .qp-institution {
+            font-size: 16px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 5px;
+        }
+
+        .qp-subtitle {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .qp-meta-table {
+            width: 100%;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .qp-meta-table tr {
+            height: 20px;
+        }
+
+        .qp-meta-table td {
+            padding: 3px 8px;
+            border: 1px solid #000;
+        }
+
+        .qp-meta-label {
+            font-weight: bold;
+            width: 15%;
+            background: #f0f0f0;
+        }
+
+        .qp-questions {
+            margin-top: 20px;
+        }
+
+        .qp-question {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+
+        .qp-question-num {
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 5px;
+            display: inline-block;
+        }
+
+        .qp-question-marks {
+            float: right;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .qp-question-text {
+            font-size: 13px;
+            margin-bottom: 8px;
+            clear: both;
+            line-height: 1.5;
+        }
+
+        .qp-question-details {
+            display: flex;
+            gap: 20px;
+            font-size: 11px;
+            margin-bottom: 10px;
+            padding: 5px;
+            background: #f9f9f9;
+            border-left: 3px solid #1e3a8a;
+        }
+
+        .qp-detail-item {
+            flex: 1;
+        }
+
+        .qp-detail-label {
+            font-weight: bold;
+            display: inline;
+        }
+
+        .qp-answer-space {
+            height: 50px;
+            border: 1px dotted #999;
+            padding: 5px;
+            background: #fafafa;
+        }
+
+        /* Preview styles */
+        .preview-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .preview-qp {
+            width: 100%;
+            background: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -123,33 +211,18 @@
             </div>
         </div>
         <nav class="nav flex-column p-3">
-            <a class="nav-link" href="index.html">
-                <i class="bi bi-house-door me-2"></i>Dashboard
-            </a>
-            <a class="nav-link" href="programs.html">
-                <i class="bi bi-book me-2"></i>Programs
-            </a>
-            <a class="nav-link" href="branches.html">
-                <i class="bi bi-diagram-3 me-2"></i>Branches
-            </a>
-            <a class="nav-link" href="regulations.html">
-                <i class="bi bi-file-earmark-rule me-2"></i>Regulations
-            </a>
-            <a class="nav-link" href="courses.html">
-                <i class="bi bi-journal-text me-2"></i>Courses
-            </a>
-            <a class="nav-link" href="faculty.html">
-                <i class="bi bi-person-badge me-2"></i>Faculty
-            </a>
-            <a class="nav-link active" href="qp-generation.html">
-                <i class="bi bi-file-earmark-text me-2"></i>QP Generation
-            </a>
+            <a class="nav-link" href="index.html"><i class="bi bi-house-door me-2"></i>Dashboard</a>
+            <a class="nav-link" href="programs.html"><i class="bi bi-book me-2"></i>Programs</a>
+            <a class="nav-link" href="branches.html"><i class="bi bi-diagram-3 me-2"></i>Branches</a>
+            <a class="nav-link" href="regulations.html"><i class="bi bi-file-earmark-rule me-2"></i>Regulations</a>
+            <a class="nav-link" href="courses.html"><i class="bi bi-journal-text me-2"></i>Courses</a>
+            <a class="nav-link" href="faculty.html"><i class="bi bi-person-badge me-2"></i>Faculty</a>
+            <a class="nav-link active" href="qp-generation.html"><i class="bi bi-file-earmark-text me-2"></i>QP Generation</a>
         </nav>
     </div>
 
     <!-- Main Content -->
     <div class="main-content" id="mainContent">
-        <!-- Topbar -->
         <nav class="navbar topbar">
             <div class="container-fluid">
                 <button class="btn btn-link d-md-none" id="toggleSidebar">
@@ -172,7 +245,6 @@
             </div>
         </nav>
 
-        <!-- Page Content -->
         <div class="container-fluid p-4">
             <div class="row mb-4">
                 <div class="col-12">
@@ -212,7 +284,7 @@
                                         <label class="form-label">Date of Exam *</label>
                                         <input type="date" class="form-control" id="examDate">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label class="form-label">Regulation</label>
                                         <select class="form-select" id="regulation">
                                             <option>AR23</option>
@@ -220,7 +292,7 @@
                                             <option>AR18</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label class="form-label">Year</label>
                                         <select class="form-select" id="year">
                                             <option>I</option>
@@ -229,21 +301,31 @@
                                             <option>IV</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label class="form-label">Semester</label>
                                         <select class="form-select" id="semester">
                                             <option>I</option>
                                             <option>II</option>
                                         </select>
                                     </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Duration (min)</label>
+                                        <input type="number" class="form-control" id="duration" value="120" min="30">
+                                    </div>
                                     <div class="col-12">
-                                        <label class="form-label">Academic Year</label>
-                                        <input type="text" class="form-control" id="academicYear" value="2025-2026" readonly>
+                                        <label class="form-label">Total Marks</label>
+                                        <input type="number" class="form-control" id="totalMarks" value="100" min="10">
                                     </div>
                                 </div>
                                 <div class="mt-4">
                                     <button type="button" class="btn btn-success" id="generateTemplate">
                                         <i class="bi bi-magic me-2"></i>Generate Template
+                                    </button>
+                                    <button type="button" class="btn btn-secondary ms-2" id="addQuestionBtn">
+                                        <i class="bi bi-plus-lg me-1"></i>Add Question
+                                    </button>
+                                    <button type="button" class="btn btn-primary ms-2" id="downloadPdfBtn">
+                                        <i class="bi bi-download me-1"></i>Download PDF
                                     </button>
                                 </div>
                             </form>
@@ -253,10 +335,10 @@
                 <div class="col-lg-4">
                     <div class="card">
                         <div class="card-header">
-                            <h6 class="mb-0">Preview</h6>
+                            <h6 class="mb-0">Live Preview</h6>
                         </div>
-                        <div class="card-body" id="qpPreview">
-                            <p class="text-muted">Select Program and Course to see preview...</p>
+                        <div class="card-body preview-container" id="qpPreview">
+                            <p class="text-muted text-center">Click "Generate Template" to preview</p>
                         </div>
                     </div>
                 </div>
@@ -264,7 +346,10 @@
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <script>
         // Sample data
         const programCourses = {
@@ -277,24 +362,48 @@
             ]
         };
 
+        const arrayDSQuestions = [
+            "What is an array in JavaScript?",
+            "How are arrays stored in memory?",
+            "How do JavaScript arrays differ from arrays in C/C++?",
+            "What is the time complexity of accessing an element by index?",
+            "What is the difference between Array and Object in JavaScript?",
+            "Can JavaScript arrays store multiple data types?",
+            "What is a sparse array?",
+            "What is the length property of an array?",
+            "How do you check if a variable is an array?",
+            "What happens when you assign a value to an index greater than the array length?",
+            "How do you insert an element at the beginning of an array?",
+            "How do you insert an element at the end of an array?",
+            "How do you remove an element from the beginning of an array?",
+            "How do you remove an element from the end of an array?",
+            "What is the difference between push() and unshift()?",
+            "What is the difference between pop() and shift()?",
+            "How do you insert or delete an element at a specific index?",
+            "What is the time complexity of inserting an element in the middle of an array?",
+            "How do you copy an array?",
+            "What is the difference between shallow copy and deep copy?",
+            "How do you traverse an array in JavaScript?",
+            "What is the difference between for, for...of, and forEach()?",
+            "How does indexOf() work?",
+            "What is the difference between find() and filter()?",
+            "How do you search for an element in an unsorted array?"
+        ];
+
         // DOM Elements
         const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('mainContent');
         const toggleSidebar = document.getElementById('toggleSidebar');
 
-        // Toggle Sidebar
         toggleSidebar.addEventListener('click', () => {
             sidebar.classList.toggle('mobile-open');
         });
 
-        // Dynamic Dropdowns for QP Generation
+        // Dynamic Dropdowns
         document.getElementById('programSelect').addEventListener('change', function() {
             const programId = parseInt(this.value);
             const courseSelect = document.getElementById('courseSelect');
-            
             courseSelect.innerHTML = '<option>Select Course</option>';
             courseSelect.disabled = true;
-            
             if (programId && programCourses[programId]) {
                 programCourses[programId].forEach(course => {
                     courseSelect.innerHTML += `<option value="${course.id}">${course.name}</option>`;
@@ -303,23 +412,192 @@
             }
         });
 
-        document.getElementById('generateTemplate').addEventListener('click', function() {
-            const preview = document.getElementById('qpPreview');
-            preview.innerHTML = `
-                <div class="alert alert-success">
-                    <h6>Question Paper Template Generated!</h6>
-                    <p>Select CO, Bloom Level, Difficulty, and Marks for each question.</p>
-                </div>
-                <div class="qp-template">
-                    <div class="mb-3">
-                        <label>Q1 (10 Marks)</label>
-                        <select class="form-select">
-                            <option>Random Question</option>
-                        </select>
+        // Helper function
+        function getRandomSample(arr, k) {
+            const copy = arr.slice();
+            const result = [];
+            k = Math.min(k, copy.length);
+            for (let i = 0; i < k; i++) {
+                const idx = Math.floor(Math.random() * copy.length);
+                result.push(copy.splice(idx, 1)[0]);
+            }
+            return result;
+        }
+
+        // Generate Question Paper HTML
+        function generateQPHTML(questions, metadata) {
+            let html = `
+                <div class="qp-print-wrapper">
+                    <div class="qp-header">
+                        <div class="qp-institution">GMRIT - GMR INSTITUTE OF ENGINEERING AND TECHNOLOGY</div>
+                        <div class="qp-subtitle">QUESTION PAPER</div>
+                        
+                        <table class="qp-meta-table" style="width: 100%;">
+                            <tr>
+                                <td class="qp-meta-label">Course Code</td>
+                                <td colspan="3">${metadata.course}</td>
+                                <td class="qp-meta-label">Regulation</td>
+                                <td>${metadata.regulation}</td>
+                            </tr>
+                            <tr>
+                                <td class="qp-meta-label">Year/Sem</td>
+                                <td>${metadata.year} Year / ${metadata.semester} Semester</td>
+                                <td class="qp-meta-label">Assessment</td>
+                                <td>${metadata.assessment}</td>
+                                <td class="qp-meta-label">Date</td>
+                                <td>${metadata.date}</td>
+                            </tr>
+                            <tr>
+                                <td class="qp-meta-label">Duration</td>
+                                <td>${metadata.duration} Minutes</td>
+                                <td class="qp-meta-label">Max Marks</td>
+                                <td>${metadata.totalMarks}</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </table>
                     </div>
-                    <!-- More dynamic questions -->
+
+                    <div class="qp-questions">
+            `;
+
+            questions.forEach((q, idx) => {
+                html += `
+                    <div class="qp-question">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <div class="qp-question-num">Q${idx + 1}.</div>
+                            <div class="qp-question-marks">[${q.marks} Marks]</div>
+                        </div>
+                        <div class="qp-question-text">${q.text}</div>
+                        <div class="qp-question-details">
+                            <div class="qp-detail-item"><span class="qp-detail-label">CO:</span> ${q.co}</div>
+                            <div class="qp-detail-item"><span class="qp-detail-label">Bloom's:</span> ${q.bloom}</div>
+                        </div>
+                        <div class="qp-answer-space"></div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
                 </div>
             `;
+            return html;
+        }
+
+        // Generate Template
+        document.getElementById('generateTemplate').addEventListener('click', function() {
+            const preview = document.getElementById('qpPreview');
+            const program = document.getElementById('programSelect').options[document.getElementById('programSelect').selectedIndex].text;
+            const course = document.getElementById('courseSelect').options[document.getElementById('courseSelect').selectedIndex].text;
+            const assessment = document.getElementById('assessmentType').value;
+            const regulation = document.getElementById('regulation').value;
+            const year = document.getElementById('year').value;
+            const semester = document.getElementById('semester').value;
+            const duration = document.getElementById('duration').value;
+            const totalMarks = document.getElementById('totalMarks').value;
+            const examDate = document.getElementById('examDate').value || 'TBD';
+
+            if (!program || program === 'Select Program' || !course || course === 'Select Course') {
+                alert('Please select Program and Course first!');
+                return;
+            }
+
+            // Generate 5 random questions
+            const selectedQuestions = getRandomSample(arrayDSQuestions, 5);
+            const cos = ['CO1','CO2','CO3','CO4','CO5'];
+            const blooms = ['Remember','Understand','Apply','Analyze','Evaluate'];
+
+            const questions = selectedQuestions.map((text, idx) => ({
+                text: text,
+                marks: 20,
+                co: cos[idx % cos.length],
+                bloom: blooms[idx % blooms.length]
+            }));
+
+            const metadata = {
+                course: course,
+                regulation: regulation,
+                year: year,
+                semester: semester,
+                assessment: assessment,
+                date: examDate,
+                duration: duration,
+                totalMarks: totalMarks
+            };
+
+            // Store for PDF download
+            window.qpData = {
+                questions: questions,
+                metadata: metadata
+            };
+
+            const html = generateQPHTML(questions, metadata);
+            preview.innerHTML = html;
+        });
+
+        // Add Question
+        document.getElementById('addQuestionBtn').addEventListener('click', function() {
+            if (!window.qpData) {
+                alert('Generate template first!');
+                return;
+            }
+
+            const randomQ = arrayDSQuestions[Math.floor(Math.random() * arrayDSQuestions.length)];
+            const cos = ['CO1','CO2','CO3','CO4','CO5'];
+            const blooms = ['Remember','Understand','Apply','Analyze','Evaluate'];
+            const randomCO = cos[Math.floor(Math.random() * cos.length)];
+            const randomBloom = blooms[Math.floor(Math.random() * blooms.length)];
+
+            window.qpData.questions.push({
+                text: randomQ,
+                marks: 20,
+                co: randomCO,
+                bloom: randomBloom
+            });
+
+            const html = generateQPHTML(window.qpData.questions, window.qpData.metadata);
+            document.getElementById('qpPreview').innerHTML = html;
+        });
+
+        // Download PDF - FIXED ALIGNMENT
+        document.getElementById('downloadPdfBtn').addEventListener('click', function() {
+            if (!window.qpData) {
+                alert('Generate template first!');
+                return;
+            }
+
+            const element = document.querySelector('.qp-print-wrapper');
+            
+            // Clone for PDF to avoid affecting the preview
+            const pdfElement = element.cloneNode(true);
+            
+            const opt = {
+                margin: 0,
+                filename: `QP_${window.qpData.metadata.course.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2,
+                    useCORS: true,
+                    letterRendering: true,
+                    //windowWidth: 1450,
+                   // windowHeight: 13123,
+                    backgroundColor: '#ffffff'
+                },
+                jsPDF: { 
+                    //unit: 'mm',
+                    format: 'a4',
+                    orientation: 'portrait',
+                    compress: true,
+                    precision: 10
+                }
+            };
+
+            html2pdf().set(opt).from(pdfElement).save().then(() => {
+                alert('✅ PDF downloaded successfully!');
+            }).catch(err => {
+                console.error('PDF Error:', err);
+                alert('❌ Failed to generate PDF: ' + err);
+            });
         });
     </script>
 </body>

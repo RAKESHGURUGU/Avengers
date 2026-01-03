@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
+from datetime import datetime
 
 # Programs
 def get_programs(db: Session, skip: int = 0, limit: int = 100):
@@ -303,7 +304,11 @@ def get_generated_qps(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.GeneratedQP).offset(skip).limit(limit).all()
 
 def create_generated_qp(db: Session, qp: schemas.GeneratedQPCreate):
-    db_qp = models.GeneratedQP(**qp.dict())
+    qp_data = qp.dict()
+    # Ensure created_at is present; if not, set to current ISO timestamp
+    if not qp_data.get('created_at'):
+        qp_data['created_at'] = datetime.utcnow().isoformat()
+    db_qp = models.GeneratedQP(**qp_data)
     db.add(db_qp)
     db.commit()
     db.refresh(db_qp)

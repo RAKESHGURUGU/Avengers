@@ -253,6 +253,14 @@
                                                         <button type="button" class="btn btn-outline-primary ms-2" id="downloadPdf" disabled>
                                                             <i class="bi bi-download me-2"></i>Download PDF
                                                         </button>
+                                                        <button type="button" class="btn btn-outline-success ms-2" id="saveToDb" disabled>
+                                                            <i class="bi bi-database-fill me-2"></i>Save to DB
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-secondary ms-2" id="refreshSaved">
+                                                            <i class="bi bi-arrow-clockwise me-2"></i>Refresh Saved
+                                                        </button>
+                                                        <select id="savedQpSelect" class="form-select ms-2" style="width:300px; display:none;"></select>
+                                                        <button type="button" class="btn btn-outline-info ms-2" id="loadSaved" style="display:none;">Load Saved</button>
                                                     </div>
                             </form>
                         </div>
@@ -340,9 +348,11 @@
             }
 
             addQuestionToPreview(questionContent, unit, co, bloom, difficulty, marks);
-            // Enable download after at least one question is added
+            // Enable download and save after at least one question is added
             const downloadBtn = document.getElementById('downloadPdf');
+            const saveBtn = document.getElementById('saveToDb');
             if (downloadBtn) downloadBtn.disabled = false;
+            if (saveBtn) saveBtn.disabled = false;
         });
 
         function addQuestionToPreview(content, unit, co, bloom, difficulty, marks) {
@@ -363,18 +373,25 @@
 
         // Generate Template
         generateTemplateBtn.addEventListener('click', function() {
-            qpPreview.innerHTML = `
-                <div class="alert alert-success">
-                    <h6>Question Paper Template Generated!</h6>
-                    <p>Add questions using the form above.</p>
-                </div>
-                <div id="questionsList">
-                    <!-- Questions will be added here -->
-                </div>
-            `;
-            // Enable PDF download once template exists
-            const downloadBtn = document.getElementById('downloadPdf');
-            if (downloadBtn) downloadBtn.disabled = false;
+            try {
+                qpPreview.innerHTML = `
+                    <div class="alert alert-success">
+                        <h6>Question Paper Template Generated!</h6>
+                        <p>Add questions using the form above.</p>
+                    </div>
+                    <div id="questionsList">
+                        <!-- Questions will be added here -->
+                    </div>
+                `;
+                // Enable PDF download once template exists
+                const downloadBtn = document.getElementById('downloadPdf');
+                const saveBtn = document.getElementById('saveToDb');
+                if (downloadBtn) downloadBtn.disabled = false;
+                if (saveBtn) saveBtn.disabled = false;
+            } catch (err) {
+                console.error('Error generating template:', err);
+                alert('Error generating template: ' + (err && err.message ? err.message : String(err)));
+            }
         });
 
         // Download PDF
@@ -393,6 +410,130 @@
                 };
                 // Note: Images must be same-origin or data URLs to embed correctly (CORS). 
                 html2pdf().set(opt).from(element).save();
+            });
+        }
+
+        // Save generated QP to backend
+        const saveToDbBtn = document.getElementById('saveToDb');
+        if (saveToDbBtn) {
+            saveToDbBtn.addEventListener('click', async function() {
+                // Assemble payload
+                const courseName = document.getElementById('courseSelect').value;
+                // Map course names to IDs (demo mapping) - replace with real IDs in production
+                const courseMap = { 'Data Structures': 1, 'Algorithms': 2 };
+                const courseId = courseMap[courseName] || 1;
+
+                const payload = {
+                    program_id: 1, // demo default
+                    course_id: courseId,
+                    assessment_type: document.getElementById('assessmentType').value,
+                    date_of_exam: document.getElementById('examDate').value || '',
+                    regulation_id: 1,
+                    year: (new Date()).getFullYear().toString(),
+                    semester: 'I',
+                    academic_year: document.getElementById('academicYear').value || '',
+                    questions: ''
+                };
+
+                // Collect questions from preview
+                const questions = [];
+                document.querySelectorAll('#qpPreview .question-item').forEach(qel => {
+                    const meta = qel.querySelector('strong') ? qel.querySelector('strong').textContent : '';
+                    const content = qel.querySelector('div') ? qel.querySelector('div').textContent : qel.textContent;
+                    questions.push({ meta: meta, content: content });
+                });
+
+                payload.questions = JSON.stringify(questions);
+
+                try {
+                    const resp = await fetch('http://127.0.0.1:8000/generated_qps/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        alert('Question paper saved (id=' + data.id + ')');
+                    } else {
+                        const text = await resp.text();
+                        console.error('Save failed', resp.status, text);
+                        alert('Save failed: ' + resp.status);
+                    }
+                } catch (err) {
+                    console.error('Error saving QP:', err);
+                    alert('Error saving QP. Is the backend running?');
+                }
+            });
+        }
+
+        // Refresh saved QPs list (GET /generated_qps/)
+        const refreshSavedBtn = document.getElementById('refreshSaved');
+        const savedSelect = document.getElementById('savedQpSelect');
+        const loadSavedBtn = document.getElementById('loadSaved');
+        async function fetchSavedQPs() {
+            try {
+                const resp = await fetch('http://127.0.0.1:8000/generated_qps/');
+                if (!resp.ok) throw new Error('Failed to fetch');
+                const list = await resp.json();
+                if (!savedSelect) return;
+                savedSelect.innerHTML = '';
+                if (!list.length) {
+                    savedSelect.style.display = 'none';
+                    loadSavedBtn.style.display = 'none';
+                    alert('No saved question papers found');
+                    return;
+                }
+                list.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.textContent = `#${item.id} - ${item.academic_year || ''} ${item.assessment_type} ${item.date_of_exam || ''}`;
+                    savedSelect.appendChild(opt);
+                });
+                savedSelect.style.display = 'inline-block';
+                loadSavedBtn.style.display = 'inline-block';
+            } catch (err) {
+                console.error('Error fetching saved QPs:', err);
+                alert('Could not load saved QPs. Is the backend running?');
+            }
+        }
+
+        if (refreshSavedBtn) refreshSavedBtn.addEventListener('click', fetchSavedQPs);
+
+        if (loadSavedBtn) {
+            loadSavedBtn.addEventListener('click', async function() {
+                const id = savedSelect ? savedSelect.value : null;
+                if (!id) { alert('Select a saved QP first'); return; }
+                try {
+                    const resp = await fetch(`http://127.0.0.1:8000/generated_qps/${id}`);
+                    if (!resp.ok) { alert('Failed to fetch selected QP'); return; }
+                    const qp = await resp.json();
+                    // qp.questions is stored as JSON string
+                    const questions = JSON.parse(qp.questions || '[]');
+                    // Clear preview and populate from saved questions
+                    qpPreview.innerHTML = '';
+                    if (questions.length === 0) {
+                        qpPreview.innerHTML = '<p class="text-muted">No questions found in the selected QP.</p>';
+                        return;
+                    }
+                    questions.forEach(q => {
+                        // q has { meta, content }
+                        const questionItem = document.createElement('div');
+                        questionItem.className = 'question-item';
+                        questionItem.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>${q.meta || ''}</strong><br>
+                                    ${q.content || ''}
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger" onclick="this.parentElement.parentElement.remove()">Remove</button>
+                            </div>
+                        `;
+                        qpPreview.appendChild(questionItem);
+                    });
+                } catch (err) {
+                    console.error('Error loading saved QP:', err);
+                    alert('Error loading saved QP');
+                }
             });
         }
     </script>

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine
 from . import models
-from .routers import programs, branches, courses, faculties, auth, regulations
+from .routers import programs, branches, courses, faculties, auth, regulations, generated_qps
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -22,6 +22,7 @@ app.include_router(courses.router)
 app.include_router(faculties.router)
 app.include_router(regulations.router)
 app.include_router(auth.router)
+app.include_router(generated_qps.router)
 
 @app.get("/")
 async def read_root():

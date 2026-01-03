@@ -155,67 +155,100 @@
             }
         }
 
-        // Admin Login
-        document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const username = document.getElementById('adminUsername').value;
-            const password = document.getElementById('adminPassword').value;
-
+        // Helper: try backend auth, otherwise fall back to localStorage users
+        async function attemptLogin(role, username, password) {
+            // Try backend first
             try {
                 const response = await fetch('http://127.0.0.1:8000/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-
                 if (response.ok) {
                     const data = await response.json();
-                    sessionStorage.setItem('user', JSON.stringify(data.user));
-                    alert('Admin login successful!');
-                    window.location.href = 'index.html';
-                } else {
-                    alert('Invalid credentials');
+                    // Normalize stored session key to 'currentUser' used across pages
+                    const userObj = { role: data.user.role || role, username: data.user.username || username };
+                    sessionStorage.setItem('currentUser', JSON.stringify(userObj));
+                    return { ok: true, user: userObj };
                 }
-            } catch (error) {
-                console.error('Login error:', error);
-                alert('Login failed');
+            } catch (err) {
+                // network/backend not available -> fall back to localStorage
+                console.warn('Backend login failed, falling back to local users:', err);
+            }
+
+            // Fallback: check localStorage users array
+            try {
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                const found = users.find(u => u.username === username && u.password === password && u.role === role);
+                if (found) {
+                    const userObj = { role: found.role, username: found.username };
+                    sessionStorage.setItem('currentUser', JSON.stringify(userObj));
+                    return { ok: true, user: userObj };
+                }
+            } catch (err) {
+                console.error('Error checking local users:', err);
+            }
+
+            return { ok: false };
+        }
+
+        // Admin Login
+        document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('adminUsername').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            const res = await attemptLogin('admin', username, password);
+            if (res.ok) {
+                alert('Admin login successful!');
+                window.location.href = 'index.html';
+            } else {
+                alert('Invalid credentials');
             }
         });
 
         // Faculty Login
         document.getElementById('facultyLoginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const username = document.getElementById('facultyUsername').value;
+            const username = document.getElementById('facultyUsername').value.trim();
             const password = document.getElementById('facultyPassword').value;
-
-            try {
-                const response = await fetch('http://127.0.0.1:8000/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    sessionStorage.setItem('user', JSON.stringify(data.user));
-                    alert('Faculty login successful!');
-                    window.location.href = 'faculty-dashboard.html';
-                } else {
-                    alert('Invalid credentials');
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                alert('Login failed');
+            const res = await attemptLogin('faculty', username, password);
+            if (res.ok) {
+                alert('Faculty login successful!');
+                window.location.href = 'faculty-dashboard.html';
+            } else {
+                alert('Invalid credentials');
             }
         });
 
-        // Print any previously stored credentials to console on page load (convenience)
+        // On page load: ensure default users exist (demo only) and print any stored demo credentials
         window.addEventListener('load', function() {
             try {
+                // Seed default users for convenience if they don't already exist
+                const defaults = [
+                    { username: 'rakesh', password: '1234', role: 'admin', fullName: 'Rakesh' },
+                    { username: 'kuladeep', password: '1234', role: 'faculty', fullName: 'Kuladeep' }
+                ];
+                const storedUsers = JSON.parse(localStorage.getItem('users') || '[]');
+                let changed = false;
+                defaults.forEach(d => {
+                    if (!storedUsers.find(u => u.username === d.username)) {
+                        const newId = storedUsers.length ? Math.max(...storedUsers.map(u => u.id || 0)) + 1 : 1;
+                        storedUsers.push(Object.assign({ id: newId, createdAt: new Date().toISOString() }, d));
+                        changed = true;
+                    }
+                });
+                if (changed) {
+                    localStorage.setItem('users', JSON.stringify(storedUsers));
+                    console.log('Default demo users added to localStorage.');
+                }
+
                 const a = loadCredentials('adminCredentials');
                 const f = loadCredentials('facultyCredentials');
                 if (a) console.log('Stored adminCredentials (on load):', a);
                 if (f) console.log('Stored facultyCredentials (on load):', f);
+
+                // Also log users list for convenience
+                console.log('Users in localStorage:', storedUsers);
             } catch (err) {
                 console.warn('Could not read stored credentials on load:', err);
             }
